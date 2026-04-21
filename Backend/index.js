@@ -3,7 +3,8 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const conectarBaseDeDatos = require('./config/db');
-const authRoutes = require('./routes/authRoutes');
+const authRoutes = require('./routes/authRoutesClean');
+const servicioRoutes = require('./routes/servicioRoutes');
 
 const app = express();
 
@@ -12,19 +13,20 @@ conectarBaseDeDatos();
 
 // Middlewares
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 // Rutas
 app.use('/api/usuarios', authRoutes);
-
-// Rutas
-app.use('/api/usuarios', require('./routes/authRoutes'));
-app.use('/api/servicios', require('./routes/servicioRoutes')); // Agregamos las rutas de servicios
+app.use('/api/servicios', servicioRoutes);
 
 app.get('/', (req, res) => {
     res.send('Servidor en línea ');
 });
 // Iniciar el servidor
+app.use((req, res) => {
+    res.status(404).json({ mensaje: 'Ruta no encontrada.' });
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);

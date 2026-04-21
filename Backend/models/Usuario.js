@@ -3,13 +3,20 @@ const bcrypt = require('bcryptjs'); // Importamos bcryptjs para encriptar las co
 
 // Definimos el esquema de usuario con los campos necesarios
 
-const UsuarioSchema = new mongoose.Schema({
-    nombre: { type: String, required: true },
-    correo: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    rol: { type: String, enum: ['cliente', 'trabajador'], default: 'cliente' },
-    oficio: { type: String, default: 'Ninguno' }
-});
+const UsuarioSchema = new mongoose.Schema(
+    {
+        nombre: { type: String, required: true, trim: true },
+        correo: { type: String, required: true, unique: true, trim: true, lowercase: true },
+        password: { type: String, required: true },
+        rol: { type: String, enum: ['cliente', 'trabajador'], default: 'cliente' },
+        telefono: { type: String, default: '', trim: true },
+        oficioCategoria: { type: String, default: 'General', trim: true },
+        oficio: { type: String, default: 'Ninguno', trim: true },
+    },
+    {
+        timestamps: true,
+    }
+);
 
 // USAMOS ASYNC 
 UsuarioSchema.pre('save', async function() {
