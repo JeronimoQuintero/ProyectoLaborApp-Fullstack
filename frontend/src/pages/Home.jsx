@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
 import API from '../api/api.js';
+import CardServicio from '../components/CardServicio.jsx';
 
 const Home = () => {
     const [servicios, setServicios] = useState([]);
     const [busqueda, setBusqueda] = useState('');
+    const [cargando, setCargando] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const cargarServicios = async () => {
             try {
+                setError('');
                 const res = await API.get('/servicios');
                 setServicios(res.data);
             } catch (error) {
-                console.error(error);
+                setError('No fue posible cargar los servicios en este momento.');
+            } finally {
+                setCargando(false);
             }
         };
         cargarServicios();
@@ -65,54 +71,18 @@ const Home = () => {
                     gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
                     gap: '35px' 
                 }}>
-                    {filtrados.map((s) => (
-                        <div key={s._id} style={{ 
-                            background: '#ffffff', borderRadius: '24px', overflow: 'hidden',
-                            border: '1px solid #f1f5f9', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.04)',
-                            transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                            display: 'flex', flexDirection: 'column'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-10px)';
-                            e.currentTarget.style.boxShadow = '0 25px 50px -12px rgba(0,0,0,0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.04)';
-                        }}>
-                            <div style={{ padding: '30px' }}>
-                                <div style={{ marginBottom: '20px' }}>
-                                    <span style={{ 
-                                        background: '#ecfdf5', color: '#059669', padding: '6px 16px', 
-                                        borderRadius: '12px', fontSize: '0.8rem', fontWeight: '700' 
-                                    }}>
-                                        {s.categoria}
-                                    </span>
-                                </div>
-                                <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e293b', marginBottom: '12px' }}>{s.titulo}</h3>
-                                <p style={{ color: '#475569', lineHeight: '1.7', fontSize: '1rem' }}>{s.descripcion}</p>
-                            </div>
-
-                            <div style={{ 
-                                padding: '25px 30px', background: '#f8fafc', 
-                                borderTop: '1px solid #f1f5f9', marginTop: 'auto',
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center' 
-                            }}>
-                                <div>
-                                    <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#0f172a' }}>
-                                        ${s.precio.toLocaleString()}
-                                    </span>
-                                </div>
-                                <button style={{ 
-                                    background: '#0f172a', color: 'white', border: 'none', 
-                                    padding: '12px 24px', borderRadius: '14px', fontWeight: '700',
-                                    cursor: 'pointer', fontSize: '0.9rem'
-                                }}>
-                                    Contactar
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+                    {cargando && <p style={{ color: '#64748b' }}>Cargando servicios...</p>}
+                    {!cargando && error && <p style={{ color: '#dc2626' }}>{error}</p>}
+                    {!cargando && !error && filtrados.length === 0 && (
+                        <p style={{ color: '#64748b' }}>
+                            No se encontraron servicios para esa busqueda.
+                        </p>
+                    )}
+                    {!cargando &&
+                        !error &&
+                        filtrados.map((s) => (
+                            <CardServicio key={s._id} servicio={s} />
+                        ))}
                 </div>
             </div>
         </div>

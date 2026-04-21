@@ -1,39 +1,41 @@
 import { Link } from 'react-router-dom';
 import { useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/Authcontext.jsx';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
 
     return (
-        <nav style={{ 
-            background: '#ffffff', padding: '1rem 5%', display: 'flex', 
-            justifyContent: 'space-between', alignItems: 'center', 
-            boxShadow: '0 2px 10px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 1000 
-        }}>
-            <Link to="/" style={{ textDecoration: 'none', color: '#3b82f6', fontWeight: '800', fontSize: '1.4rem' }}>
-                LaborApp
+        <nav className="topbar">
+            <Link to="/" className="brand">
+                <span className="brand-mark">LA</span>
+                <span className="brand-copy">
+                    <span className="brand-title">LaborApp</span>
+                    <span className="brand-subtitle">Servicios de confianza cerca de ti</span>
+                </span>
             </Link>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <Link to="/" style={{ textDecoration: 'none', color: '#64748b' }}>Inicio</Link>
-                
+
+            <div className="nav-cluster">
+                <div className="nav-links">
+                    <Link to="/" className="nav-link">Inicio</Link>
+                </div>
+
                 {user ? (
-                    <>
+                    <div className="nav-actions">
                         {user.rol === 'trabajador' && (
                             <>
-                                <Link to="/publicar" style={{ textDecoration: 'none', color: '#3b82f6', fontWeight: '600' }}>Publicar</Link>
-                                <Link to="/mis-servicios" style={{ textDecoration: 'none', color: '#64748b' }}>Mis Oficios</Link>
+                                <Link to="/publicar" className="nav-link">Publicar</Link>
+                                <Link to="/mis-servicios" className="nav-link">Mis servicios</Link>
                             </>
                         )}
-                        <span style={{ color: '#1e293b', fontWeight: '500' }}>Hi, {user.nombre}</span>
-                        <button onClick={logout} style={{ background: '#f1f5f9', border: 'none', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer' }}>Salir</button>
-                    </>
+                        <span className="nav-user">{user.nombre}</span>
+                        <button onClick={logout} className="button-ghost">Salir</button>
+                    </div>
                 ) : (
-                    <>
-                        <Link to="/login" style={{ textDecoration: 'none', color: '#64748b' }}>Login</Link>
-                        <Link to="/registro" style={{ textDecoration: 'none', background: '#3b82f6', color: 'white', padding: '8px 18px', borderRadius: '10px' }}>Empezar</Link>
-                    </>
+                    <div className="nav-actions">
+                        <Link to="/login" className="nav-link">Ingresar</Link>
+                        <Link to="/registro" className="button">Crear cuenta</Link>
+                    </div>
                 )}
             </div>
         </nav>

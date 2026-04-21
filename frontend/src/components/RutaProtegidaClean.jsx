@@ -2,17 +2,18 @@ import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/Authcontext.jsx';
 
-const RutaProtegida = ({ children, soloTrabajador = false }) => {
+const RutaProtegidaClean = ({ children, soloTrabajador = false }) => {
     const { user } = useContext(AuthContext);
 
-    if (!user) return <Navigate to="/login" />;
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
 
     if (soloTrabajador && user.rol !== 'trabajador') {
-        alert("Acceso denegado: Esta función es solo para trabajadores.");
-        return <Navigate to="/" />;
+        return <Navigate to="/" replace />;
     }
 
     return children;
 };
 
-export default RutaProtegida;
+export default RutaProtegidaClean;

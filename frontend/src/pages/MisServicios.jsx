@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import API from '../api/api';
+import CardServicio from '../components/CardServicio.jsx';
 
 const MisServicios = () => {
     const [servicios, setServicios] = useState([]);
+    const [error, setError] = useState('');
 
     const cargarMisServicios = async () => {
         try {
+            setError('');
             const res = await API.get('/servicios/mis-servicios');
             setServicios(res.data);
         } catch (error) {
-            console.error("Error al cargar tus servicios");
+            setError('No fue posible cargar tus publicaciones.');
         }
     };
 
@@ -23,7 +26,7 @@ const MisServicios = () => {
                 await API.delete(`/servicios/${id}`);
                 cargarMisServicios(); // Recargar la lista
             } catch (error) {
-                alert("No se pudo eliminar");
+                alert('No se pudo eliminar el servicio.');
             }
         }
     };
