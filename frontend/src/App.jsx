@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/Authcontext.jsx';
 import Home from './pages/HomePage.jsx';
 import Login from './pages/LoginPage.jsx';
@@ -7,7 +7,7 @@ import CrearServicio from './pages/CrearServicioPage.jsx';
 import EditarServicio from './pages/EditarServicioPage.jsx';
 import MisServicios from './pages/MisServiciosPage.jsx';
 import Navbar from './components/Navbar';
-import RutaProtegida from './components/RutaProtegidaClean.jsx';
+import RutaProtegida from './components/RutaProtegida.jsx';
 
 function App() {
   return (
@@ -31,3 +31,4 @@ function App() {
   );
 }
 export default App;
+

@@ -1,15 +1,36 @@
-const jwt = require('jsonwebtoken');
+﻿const jwt = require('jsonwebtoken');
+
+const obtenerToken = (req) => {
+    const cookieToken = req.cookies?.accessToken;
+    if (cookieToken) {
+        return cookieToken;
+    }
+
+    const authorization = req.header('Authorization');
+    if (authorization?.startsWith('Bearer ')) {
+        return authorization.replace('Bearer ', '').trim();
+    }
+
+    return null;
+};
 
 const verificarToken = (req, res, next) => {
-    const token = req.header('Authorization');
-    if (!token) return res.status(401).json({ mensaje: "Acceso denegado. No hay token." });
+    const secret = process.env.JWT_SECRET?.trim();
+    if (!secret) {
+        return res.status(500).json({ mensaje: 'JWT_SECRET no esta configurado.' });
+    }
+
+    const token = obtenerToken(req);
+    if (!token) {
+        return res.status(401).json({ mensaje: 'Acceso denegado. Token no enviado.' });
+    }
 
     try {
-        const cifrado = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
+        const cifrado = jwt.verify(token, secret);
         req.usuario = cifrado;
-        next(); // Si todo está bien, pasa a la siguiente función
+        return next();
     } catch (error) {
-        res.status(400).json({ mensaje: "Token no válido" });
+        return res.status(401).json({ mensaje: 'Token invalido o expirado.' });
     }
 };
 

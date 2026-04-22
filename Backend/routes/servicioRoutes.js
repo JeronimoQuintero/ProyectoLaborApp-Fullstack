@@ -1,5 +1,6 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
+
 const {
     crearServicio,
     obtenerServicios,
@@ -8,9 +9,8 @@ const {
     actualizarServicio,
     eliminarServicio,
 } = require('../controllers/servicioController');
-const verificarToken = require('../middleware/authMiddlewareClean');
+const verificarToken = require('../middleware/authMiddleware');
 
-// Publicar requiere token, Ver servicios es público
 router.post('/', verificarToken, crearServicio);
 router.get('/', obtenerServicios);
 router.get('/mis-servicios', verificarToken, obtenerMisServicios);

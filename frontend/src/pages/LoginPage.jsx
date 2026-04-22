@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+﻿import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/Authcontext.jsx';
 import API from '../api/api.js';
@@ -16,7 +16,7 @@ const LoginPage = () => {
 
         try {
             const res = await API.post('/usuarios/login', { correo, password });
-            login(res.data.usuario, res.data.token);
+            login(res.data.usuario);
             navigate('/');
         } catch (err) {
             setError(err.response?.data?.mensaje || 'No fue posible iniciar sesion.');
@@ -35,7 +35,7 @@ const LoginPage = () => {
 
                 <div className="promo-panel__list">
                     <div className="promo-point">Gestiona publicaciones desde un mismo panel.</div>
-                    <div className="promo-point">Mantén tu sesion y navega entre rutas protegidas.</div>
+                    <div className="promo-point">MantÃ©n tu sesion y navega entre rutas protegidas.</div>
                     <div className="promo-point">Conecta el frontend con tu API sin pasos extra.</div>
                 </div>
             </aside>
@@ -81,3 +81,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

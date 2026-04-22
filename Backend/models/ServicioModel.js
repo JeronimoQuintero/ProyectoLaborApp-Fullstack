@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const ServicioSchema = new mongoose.Schema(
     {
@@ -53,5 +53,9 @@ const ServicioSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+ServicioSchema.index({ categoria: 1, oficio: 1, createdAt: -1 });
+ServicioSchema.index({ titulo: 'text', descripcion: 'text', oficio: 'text' });
+ServicioSchema.index({ usuario: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Servicio', ServicioSchema);

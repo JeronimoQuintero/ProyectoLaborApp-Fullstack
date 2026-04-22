@@ -1,15 +1,34 @@
-const express = require('express'); // Importamos Express para crear el router
-const router = express.Router(); // Creamos un router para manejar las rutas de autenticación
-const { registrarUsuario, loginUsuario } = require('../controllers/authController'); // Importamos las funciones del controlador de autenticación
+﻿const express = require('express');
+const rateLimit = require('express-rate-limit');
+const slowDown = require('express-slow-down');
 
-router.post('/registro', registrarUsuario); // Ruta para el registro de usuarios
-router.post('/login', loginUsuario); // Ruta para el login (inicio de sesión)
-
-module.exports = router; // Exportamos el router para usarlo en index.js 
-
+const {
+    registrarUsuario,
+    loginUsuario,
+    obtenerPerfil,
+    logoutUsuario,
+} = require('../controllers/authController');
 const verificarToken = require('../middleware/authMiddleware');
 
-// Ruta protegida
-router.get('/perfil', verificarToken, (req, res) => {
-    res.json({ mensaje: "Este es tu perfil privado", usuario: req.usuario });
+const router = express.Router();
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 8,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { mensaje: 'Demasiados intentos. Intenta nuevamente en unos minutos.' },
 });
+
+const authSlowDown = slowDown({
+    windowMs: 15 * 60 * 1000,
+    delayAfter: 4,
+    delayMs: () => 500,
+});
+
+router.post('/registro', authLimiter, registrarUsuario);
+router.post('/login', authLimiter, authSlowDown, loginUsuario);
+router.post('/logout', logoutUsuario);
+router.get('/perfil', verificarToken, obtenerPerfil);
+
+module.exports = router;
