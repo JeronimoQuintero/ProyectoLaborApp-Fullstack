@@ -46,7 +46,24 @@ const apiRateLimiter = rateLimit({
 conectarBaseDeDatos();
 
 app.use(helmet());
-app.use(cors(corsOptions));
+app.use((req, res, next) => {
+    const origin = req.get('origin');
+    const host = req.get('host');
+
+    // Las solicitudes del mismo dominio no requieren cabeceras CORS. Esto permite
+    // servir frontend y API desde un único proyecto de Vercel sin abrir CORS.
+    if (origin && host) {
+        try {
+            if (new URL(origin).host === host) {
+                return next();
+            }
+        } catch {
+            // Si Origin no es una URL válida, el middleware CORS lo rechazará.
+        }
+    }
+
+    return cors(corsOptions)(req, res, next);
+});
 app.use(cookieParser());
 app.use(express.json({ limit: '1mb' }));
 app.use('/api', apiRateLimiter);
