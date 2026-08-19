@@ -46,4 +46,4 @@ const API = axios.create({
 - Usar secretos largos y aleatorios.
 - Separar secretos por ambiente (`dev`, `staging`, `prod`).
 - Rotar secretos periodicamente.
-- Usar gestor de secretos en despliegue (Render/Railway/Vercel/1Password/AWS Secrets Manager).
+- Guardar secretos reales solo en tu entorno local y fuera de control de versiones.

@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/api.js';
-import { categoriasOficio, obtenerOficiosPorCategoria } from '../data/oficios.js';
+import {
+    categoriasOficio,
+    formatearCategoriaOficio,
+    formatearOficio,
+    obtenerOficiosPorCategoria,
+} from '../data/oficios.js';
 import ServiceContactSection from '../components/ServiceContactSection.jsx';
 
 const CrearServicioPage = () => {
@@ -29,7 +34,7 @@ const CrearServicioPage = () => {
 
         try {
             await API.post('/servicios', form);
-            setMensaje('Servicio publicado con exito.');
+            setMensaje('Servicio publicado con éxito.');
             setTimeout(() => navigate('/mis-servicios'), 900);
         } catch (err) {
             setError(err.response?.data?.mensaje || 'No se pudo publicar el servicio.');
@@ -39,17 +44,17 @@ const CrearServicioPage = () => {
     return (
         <section className="form-page">
             <aside className="surface-card promo-panel">
-                <span className="eyebrow">Publicacion profesional</span>
+                <span className="eyebrow">Publicación profesional</span>
                 <h1>Convierte tu experiencia en una oferta clara, atractiva y confiable.</h1>
                 <p>
-                    Describe bien tu servicio, muestra tu categoria y define un precio visible para que el
+                    Describe bien tu servicio, muestra tu categoría y define un precio visible para que el
                     cliente entienda tu propuesta desde el primer vistazo.
                 </p>
 
                 <div className="promo-panel__list">
-                    <div className="promo-point">Titulos claros para mejorar la primera impresion.</div>
-                    <div className="promo-point">Descripcion detallada para transmitir confianza.</div>
-                    <div className="promo-point">Precio visible para reducir friccion al contactar.</div>
+                    <div className="promo-point">Títulos claros para mejorar la primera impresión.</div>
+                    <div className="promo-point">Descripción detallada para transmitir confianza.</div>
+                    <div className="promo-point">Precio visible para reducir fricción al contactar.</div>
                 </div>
             </aside>
 
@@ -59,27 +64,27 @@ const CrearServicioPage = () => {
 
                 <form className="form-layout" onSubmit={handleSubmit}>
                     <div className="field-group">
-                        <label className="field-label" htmlFor="servicio-titulo">Titulo</label>
+                        <label className="field-label" htmlFor="servicio-titulo">Título</label>
                         <input
                             id="servicio-titulo"
                             className="input"
                             name="titulo"
                             value={form.titulo}
                             onChange={handleChange}
-                            placeholder="Ejemplo: Reparacion de computadores a domicilio"
+                            placeholder="Ejemplo: Reparación de computadores a domicilio"
                             required
                         />
                     </div>
 
                     <div className="field-group">
-                        <label className="field-label" htmlFor="servicio-descripcion">Descripcion</label>
+                        <label className="field-label" htmlFor="servicio-descripcion">Descripción</label>
                         <textarea
                             id="servicio-descripcion"
                             className="textarea"
                             name="descripcion"
                             value={form.descripcion}
                             onChange={handleChange}
-                            placeholder="Cuenta que haces, como trabajas y que te diferencia."
+                            placeholder="Cuenta qué haces, cómo trabajas y qué te diferencia."
                             required
                         />
                     </div>
@@ -99,7 +104,7 @@ const CrearServicioPage = () => {
                     </div>
 
                     <div className="field-group">
-                        <label className="field-label" htmlFor="servicio-categoria">Categoria</label>
+                        <label className="field-label" htmlFor="servicio-categoria">Categoría</label>
                         <select
                             id="servicio-categoria"
                             className="select"
@@ -110,7 +115,9 @@ const CrearServicioPage = () => {
                             }
                         >
                             {categoriasOficio.map((categoria) => (
-                                <option key={categoria} value={categoria}>{categoria}</option>
+                                <option key={categoria} value={categoria}>
+                                    {formatearCategoriaOficio(categoria)}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -127,7 +134,7 @@ const CrearServicioPage = () => {
                         >
                             <option value="">Selecciona un oficio</option>
                             {obtenerOficiosPorCategoria(form.categoria).map((oficio) => (
-                                <option key={oficio} value={oficio}>{oficio}</option>
+                                <option key={oficio} value={oficio}>{formatearOficio(oficio)}</option>
                             ))}
                         </select>
                     </div>

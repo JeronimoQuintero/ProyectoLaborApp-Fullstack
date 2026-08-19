@@ -105,9 +105,10 @@ npm run dev
 - [04 - API](./docs/04-api.md)
 - [05 - Variables de entorno](./docs/05-env.md)
 - [06 - Guia de desarrollo](./docs/06-development-guide.md)
-- [07 - Guia de deployment](./docs/07-deployment-guide.md)
 - [08 - Arquitectura y base de datos](./docs/08-architecture.md)
 - [09 - Troubleshooting](./docs/09-troubleshooting.md)
+- [10 - Manual de usuario](./docs/10-manual-usuario.md)
+- [11 - Manual de programador](./docs/11-manual-programador.md)
 
 ## Roadmap sugerido
 1. Endurecer seguridad (cookies `httpOnly`, CORS estricto, rate limiting, helmet)

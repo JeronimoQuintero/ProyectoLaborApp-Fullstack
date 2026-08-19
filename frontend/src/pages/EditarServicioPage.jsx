@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import API from '../api/api.js';
-import { categoriasOficio, obtenerOficiosPorCategoria } from '../data/oficios.js';
+import {
+    categoriasOficio,
+    formatearCategoriaOficio,
+    formatearOficio,
+    obtenerOficiosPorCategoria,
+} from '../data/oficios.js';
 import ServiceContactSection from '../components/ServiceContactSection.jsx';
 
 const EditarServicioPage = () => {
@@ -55,7 +60,7 @@ const EditarServicioPage = () => {
 
         try {
             await API.put(`/servicios/${id}`, form);
-            setMensaje('Servicio actualizado con exito.');
+            setMensaje('Servicio actualizado con éxito.');
             setTimeout(() => navigate('/mis-servicios'), 900);
         } catch (err) {
             setError(err.response?.data?.mensaje || 'No se pudo actualizar el servicio.');
@@ -69,27 +74,27 @@ const EditarServicioPage = () => {
     return (
         <section className="form-page">
             <aside className="surface-card promo-panel">
-                <span className="eyebrow">Edicion inteligente</span>
+                <span className="eyebrow">Edición inteligente</span>
                 <h1>Actualiza tu servicio sin perder la presencia profesional del anuncio.</h1>
                 <p>
-                    Mejora tu descripcion, ajusta el precio o cambia la categoria para mantener tu oferta
-                    actualizada y mas competitiva.
+                    Mejora tu descripción, ajusta el precio o cambia la categoría para mantener tu oferta
+                    actualizada y más competitiva.
                 </p>
 
                 <div className="promo-panel__list">
-                    <div className="promo-point">Ajusta el contenido sin crear una publicacion nueva.</div>
-                    <div className="promo-point">Refina precio y categoria segun tu estrategia.</div>
+                    <div className="promo-point">Ajusta el contenido sin crear una publicación nueva.</div>
+                    <div className="promo-point">Refina precio y categoría según tu estrategia.</div>
                     <div className="promo-point">Regresa al panel apenas termines de guardar.</div>
                 </div>
             </aside>
 
             <div className="surface-card form-card">
                 <h2>Editar servicio</h2>
-                <p>Modifica la informacion de tu publicacion y guarda los cambios.</p>
+                <p>Modifica la información de tu publicación y guarda los cambios.</p>
 
                 <form className="form-layout" onSubmit={handleSubmit}>
                     <div className="field-group">
-                        <label className="field-label" htmlFor="editar-titulo">Titulo</label>
+                        <label className="field-label" htmlFor="editar-titulo">Título</label>
                         <input
                             id="editar-titulo"
                             className="input"
@@ -101,7 +106,7 @@ const EditarServicioPage = () => {
                     </div>
 
                     <div className="field-group">
-                        <label className="field-label" htmlFor="editar-descripcion">Descripcion</label>
+                        <label className="field-label" htmlFor="editar-descripcion">Descripción</label>
                         <textarea
                             id="editar-descripcion"
                             className="textarea"
@@ -126,7 +131,7 @@ const EditarServicioPage = () => {
                     </div>
 
                     <div className="field-group">
-                        <label className="field-label" htmlFor="editar-categoria">Categoria</label>
+                        <label className="field-label" htmlFor="editar-categoria">Categoría</label>
                         <select
                             id="editar-categoria"
                             className="select"
@@ -137,7 +142,9 @@ const EditarServicioPage = () => {
                             }
                         >
                             {categoriasOficio.map((categoria) => (
-                                <option key={categoria} value={categoria}>{categoria}</option>
+                                <option key={categoria} value={categoria}>
+                                    {formatearCategoriaOficio(categoria)}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -154,7 +161,7 @@ const EditarServicioPage = () => {
                         >
                             <option value="">Selecciona un oficio</option>
                             {obtenerOficiosPorCategoria(form.categoria).map((oficio) => (
-                                <option key={oficio} value={oficio}>{oficio}</option>
+                                <option key={oficio} value={oficio}>{formatearOficio(oficio)}</option>
                             ))}
                         </select>
                     </div>

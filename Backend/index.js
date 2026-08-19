@@ -10,8 +10,12 @@ const authRoutes = require('./routes/authRoutes');
 const servicioRoutes = require('./routes/servicioRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
 
-const DEFAULT_CORS_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+const DEFAULT_CORS_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+];
 const corsOrigins = (process.env.CORS_ORIGINS || DEFAULT_CORS_ORIGINS.join(','))
     .split(',')
     .map((origin) => origin.trim())
@@ -51,7 +55,13 @@ app.use('/api/usuarios', authRoutes);
 app.use('/api/servicios', servicioRoutes);
 
 app.get('/', (req, res) => {
-    res.send('Servidor en linea');
+    res.json({
+        estado: 'ok',
+        servicio: 'laborapp-api',
+        modoMemoria: process.env.USE_IN_MEMORY_DB === 'true',
+        jwtConfigurado: Boolean(process.env.JWT_SECRET),
+        fecha: new Date().toISOString(),
+    });
 });
 
 app.use((req, res) => {
@@ -71,7 +81,11 @@ app.use((error, req, res, next) => {
     res.status(500).json({ mensaje: 'Error interno del servidor.' });
 });
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
-});
+if (require.main === module) {
+    const PORT = process.env.PORT || 8080;
+    app.listen(PORT, () => {
+        console.log(`Servidor corriendo en el puerto ${PORT}`);
+    });
+}
+
+module.exports = app;

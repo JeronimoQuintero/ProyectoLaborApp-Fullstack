@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/api.js';
-import { categoriasOficio, obtenerOficiosPorCategoria } from '../data/oficios.js';
+import {
+    categoriasOficio,
+    formatearCategoriaOficio,
+    formatearOficio,
+    obtenerOficiosPorCategoria,
+} from '../data/oficios.js';
 import ContactSection from '../components/ContactSection.jsx';
 
 const RegistroPage = () => {
@@ -27,12 +32,26 @@ const RegistroPage = () => {
         setError('');
         setMensaje('');
 
+        if (formData.password.trim().length < 8) {
+            setError('La contraseña debe tener al menos 8 caracteres.');
+            return;
+        }
+
         try {
             await API.post('/usuarios/registro', formData);
-            setMensaje('Registro exitoso. Ahora puedes iniciar sesion.');
+            setMensaje('Registro exitoso. Ahora puedes iniciar sesión.');
             setTimeout(() => navigate('/login'), 900);
         } catch (err) {
-            setError(err.response?.data?.mensaje || 'No fue posible completar el registro.');
+            const fieldErrors = err.response?.data?.errores;
+            const firstFieldError = fieldErrors
+                ? Object.values(fieldErrors).flat().find(Boolean)
+                : null;
+
+            setError(
+                firstFieldError
+                || err.response?.data?.mensaje
+                || 'No fue posible completar el registro.'
+            );
         }
     };
 
@@ -47,9 +66,9 @@ const RegistroPage = () => {
                 </p>
 
                 <div className="promo-panel__list">
-                    <div className="promo-point">Perfil simple para clientes que buscan ayuda rapida.</div>
+                    <div className="promo-point">Perfil simple para clientes que buscan ayuda rápida.</div>
                     <div className="promo-point">Perfil de trabajador con especialidad visible.</div>
-                    <div className="promo-point">Base perfecta para sumar reputacion y mensajeria despues.</div>
+                    <div className="promo-point">Base perfecta para sumar reputación y mensajería después.</div>
                 </div>
             </aside>
 
@@ -72,7 +91,7 @@ const RegistroPage = () => {
                     </div>
 
                     <div className="field-group">
-                        <label className="field-label" htmlFor="registro-correo">Correo electronico</label>
+                        <label className="field-label" htmlFor="registro-correo">Correo electrónico</label>
                         <input
                             id="registro-correo"
                             className="input"
@@ -86,7 +105,7 @@ const RegistroPage = () => {
                     </div>
 
                     <div className="field-group">
-                        <label className="field-label" htmlFor="registro-password">Contrasena</label>
+                        <label className="field-label" htmlFor="registro-password">Contraseña</label>
                         <input
                             id="registro-password"
                             className="input"
@@ -94,7 +113,7 @@ const RegistroPage = () => {
                             type="password"
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Minimo 6 caracteres"
+                            placeholder="Mínimo 8 caracteres"
                             required
                         />
                     </div>
@@ -122,7 +141,7 @@ const RegistroPage = () => {
                             />
 
                             <div className="field-group">
-                                <label className="field-label" htmlFor="registro-oficio-categoria">Categoria del oficio</label>
+                                <label className="field-label" htmlFor="registro-oficio-categoria">Categoría del oficio</label>
                                 <select
                                     id="registro-oficio-categoria"
                                     className="select"
@@ -137,7 +156,9 @@ const RegistroPage = () => {
                                     }
                                 >
                                     {categoriasOficio.map((categoria) => (
-                                        <option key={categoria} value={categoria}>{categoria}</option>
+                                        <option key={categoria} value={categoria}>
+                                            {formatearCategoriaOficio(categoria)}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -154,7 +175,7 @@ const RegistroPage = () => {
                                 >
                                     <option value="">Selecciona un oficio</option>
                                     {obtenerOficiosPorCategoria(formData.oficioCategoria).map((oficio) => (
-                                        <option key={oficio} value={oficio}>{oficio}</option>
+                                        <option key={oficio} value={oficio}>{formatearOficio(oficio)}</option>
                                     ))}
                                 </select>
                             </div>

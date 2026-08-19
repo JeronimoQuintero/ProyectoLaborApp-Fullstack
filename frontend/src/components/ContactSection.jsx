@@ -3,9 +3,9 @@ const ContactSection = ({ correo, telefono, onTelefonoChange }) => {
         <section className="surface-card contact-panel">
             <div className="contact-panel__header">
                 <span className="eyebrow contact-panel__eyebrow">Contacto</span>
-                <h3 className="contact-panel__title">Informacion de contacto</h3>
+                <h3 className="contact-panel__title">Información de contacto</h3>
                 <p className="contact-panel__copy">
-                    Estos datos se compartiran con el cliente cuando pulse el boton de contacto.
+                    Estos datos se compartirán con el cliente cuando pulse el botón de contacto.
                 </p>
             </div>
 

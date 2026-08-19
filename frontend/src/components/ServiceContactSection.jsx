@@ -5,7 +5,7 @@ const ServiceContactSection = ({ correoContacto, telefonoContacto, onChange }) =
                 <span className="eyebrow contact-panel__eyebrow">Servicio</span>
                 <h3 className="contact-panel__title">Contacto del servicio</h3>
                 <p className="contact-panel__copy">
-                    Estos datos se mostraran en este servicio cuando el cliente pulse el boton de contacto.
+                    Estos datos se mostrarán en este servicio cuando el cliente pulse el botón de contacto.
                 </p>
             </div>
 

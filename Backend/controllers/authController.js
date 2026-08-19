@@ -1,7 +1,8 @@
-﻿const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { z } = require('zod');
 const Usuario = require('../models/Usuario');
+const { useInMemoryStore, store } = require('../config/inMemoryStore');
 
 const telefonoRegex = /^[0-9+\-\s()]{7,20}$/;
 const emailSchema = z.string().trim().toLowerCase().email('Correo invalido.').max(120);
@@ -74,6 +75,7 @@ const obtenerCookieOptions = () => {
 
 const serializarUsuario = (usuario) => ({
     id: usuario._id,
+    _id: usuario._id,
     nombre: usuario.nombre,
     correo: usuario.correo,
     telefono: usuario.telefono,
@@ -93,6 +95,29 @@ const registrarUsuario = async (req, res) => {
         }
 
         const { nombre, correo, password, rol, telefono, oficioCategoria, oficio } = parsed.data;
+
+        if (useInMemoryStore()) {
+            const usuarioExistenteMem = store.findUserByEmail(correo);
+            if (usuarioExistenteMem) {
+                return res.status(409).json({ mensaje: 'Ya existe un usuario con ese correo.' });
+            }
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const nuevoUsuarioMem = store.createUser({
+                nombre,
+                correo,
+                password: hashedPassword,
+                rol,
+                telefono: rol === 'trabajador' ? telefono : '',
+                oficioCategoria: rol === 'trabajador' ? oficioCategoria : 'General',
+                oficio: rol === 'trabajador' ? oficio : 'Ninguno',
+            });
+
+            return res.status(201).json({
+                mensaje: 'Usuario guardado con exito.',
+                usuario: serializarUsuario(nuevoUsuarioMem),
+            });
+        }
 
         const usuarioExistente = await Usuario.findOne({ correo });
         if (usuarioExistente) {
@@ -137,6 +162,31 @@ const loginUsuario = async (req, res) => {
 
         const { correo, password } = parsed.data;
 
+        if (useInMemoryStore()) {
+            const usuarioMem = store.findUserByEmail(correo);
+            if (!usuarioMem) {
+                return res.status(401).json({ mensaje: 'Credenciales incorrectas.' });
+            }
+
+            const esCorrectaMem = await bcrypt.compare(password, usuarioMem.password);
+            if (!esCorrectaMem) {
+                return res.status(401).json({ mensaje: 'Credenciales incorrectas.' });
+            }
+
+            const tokenMem = jwt.sign(
+                { id: String(usuarioMem._id), rol: usuarioMem.rol },
+                secret,
+                { expiresIn: process.env.JWT_ACCESS_EXPIRES || '24h' }
+            );
+
+            res.cookie('accessToken', tokenMem, obtenerCookieOptions());
+
+            return res.json({
+                mensaje: 'Bienvenido.',
+                usuario: serializarUsuario(usuarioMem),
+            });
+        }
+
         const usuario = await Usuario.findOne({ correo });
         if (!usuario) {
             return res.status(401).json({ mensaje: 'Credenciales incorrectas.' });
@@ -166,6 +216,15 @@ const loginUsuario = async (req, res) => {
 
 const obtenerPerfil = async (req, res) => {
     try {
+        if (useInMemoryStore()) {
+            const usuarioMem = store.findUserById(req.usuario.id);
+            if (!usuarioMem) {
+                return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+            }
+
+            return res.json({ usuario: serializarUsuario(usuarioMem) });
+        }
+
         const usuario = await Usuario.findById(req.usuario.id).select(
             'nombre correo telefono rol oficioCategoria oficio'
         );

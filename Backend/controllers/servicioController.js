@@ -1,7 +1,8 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const { z } = require('zod');
 const Servicio = require('../models/ServicioModel');
 const Usuario = require('../models/Usuario');
+const { useInMemoryStore, store } = require('../config/inMemoryStore');
 
 const telefonoRegex = /^[0-9+\-\s()]{7,20}$/;
 
@@ -38,11 +39,7 @@ const parsearParametrosDeListado = (query) => {
         return { error: 'El parametro maxPrecio no es valido.' };
     }
 
-    if (
-        minPrecio !== undefined &&
-        maxPrecio !== undefined &&
-        minPrecio > maxPrecio
-    ) {
+    if (minPrecio !== undefined && maxPrecio !== undefined && minPrecio > maxPrecio) {
         return { error: 'El rango de precios no es valido.' };
     }
 
@@ -106,6 +103,80 @@ const construirFiltroDeBusqueda = ({ q, categoria, oficio, minPrecio, maxPrecio 
     return filter;
 };
 
+const normalizarTexto = (value = '') => String(value).trim().toLowerCase();
+
+const crearServicioConUsuarioMem = (servicio) => {
+    const owner = store.findUserById(servicio.usuario);
+    return {
+        ...servicio,
+        usuario: owner
+            ? {
+                _id: owner._id,
+                nombre: owner.nombre,
+                oficio: owner.oficio,
+                oficioCategoria: owner.oficioCategoria,
+                correo: owner.correo,
+                telefono: owner.telefono,
+            }
+            : null,
+    };
+};
+
+const filtrarServiciosMemoria = (servicios, params) => {
+    const q = normalizarTexto(params.q || '');
+    const categoria = String(params.categoria || '').trim();
+    const oficio = String(params.oficio || '').trim();
+
+    return servicios.filter((servicio) => {
+        if (categoria && servicio.categoria !== categoria) {
+            return false;
+        }
+
+        if (oficio && servicio.oficio !== oficio) {
+            return false;
+        }
+
+        if (params.minPrecio !== undefined && Number(servicio.precio) < params.minPrecio) {
+            return false;
+        }
+
+        if (params.maxPrecio !== undefined && Number(servicio.precio) > params.maxPrecio) {
+            return false;
+        }
+
+        if (q) {
+            const searchable = [
+                servicio.titulo,
+                servicio.descripcion,
+                servicio.categoria,
+                servicio.oficio,
+            ]
+                .join(' ')
+                .toLowerCase();
+
+            if (!searchable.includes(q)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+};
+
+const ordenarServiciosMemoria = (servicios, sortBy, sortDir) => {
+    return [...servicios].sort((left, right) => {
+        if (sortBy === 'titulo') {
+            return left.titulo.localeCompare(right.titulo) * sortDir;
+        }
+
+        if (sortBy === 'precio') {
+            return (Number(left.precio) - Number(right.precio)) * sortDir;
+        }
+
+        return (new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()) * sortDir;
+    });
+};
+
 const crearServicio = async (req, res) => {
     try {
         const parsed = servicioSchema.safeParse(req.body);
@@ -114,6 +185,21 @@ const crearServicio = async (req, res) => {
                 mensaje: 'Datos del servicio invalidos.',
                 errores: parsed.error.flatten().fieldErrors,
             });
+        }
+
+        if (useInMemoryStore()) {
+            const usuarioMem = store.findUserById(req.usuario.id);
+            if (!usuarioMem) {
+                return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+            }
+
+            const nuevoServicioMem = store.createService({
+                ...parsed.data,
+                usuario: String(req.usuario.id),
+                oficioCategoria: usuarioMem.oficioCategoria,
+            });
+
+            return res.status(201).json(crearServicioConUsuarioMem(nuevoServicioMem));
         }
 
         const usuario = await Usuario.findById(req.usuario.id).select('oficioCategoria');
@@ -152,6 +238,35 @@ const obtenerServicios = async (req, res) => {
             sortBy,
             sortDir,
         } = parsedQuery;
+
+        if (useInMemoryStore()) {
+            const serviciosMem = store.listServices();
+            const filtrados = filtrarServiciosMemoria(serviciosMem, {
+                q,
+                categoria,
+                oficio,
+                minPrecio,
+                maxPrecio,
+            });
+            const ordenados = ordenarServiciosMemoria(filtrados, sortBy, sortDir);
+
+            const total = ordenados.length;
+            const totalPages = Math.max(Math.ceil(total / limite), 1);
+            const offset = (pagina - 1) * limite;
+            const items = ordenados.slice(offset, offset + limite).map(crearServicioConUsuarioMem);
+
+            return res.json({
+                items,
+                meta: {
+                    page: pagina,
+                    limit: limite,
+                    total,
+                    totalPages,
+                    hasNextPage: pagina < totalPages,
+                    hasPrevPage: pagina > 1,
+                },
+            });
+        }
 
         const filter = construirFiltroDeBusqueda({
             q,
@@ -193,6 +308,15 @@ const obtenerServicios = async (req, res) => {
 
 const obtenerMisServicios = async (req, res) => {
     try {
+        if (useInMemoryStore()) {
+            const serviciosMem = store
+                .listServicesByUser(req.usuario.id)
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .map(crearServicioConUsuarioMem);
+
+            return res.json(serviciosMem);
+        }
+
         const servicios = await Servicio.find({ usuario: req.usuario.id }).sort({ createdAt: -1 });
         return res.json(servicios);
     } catch (error) {
@@ -202,8 +326,21 @@ const obtenerMisServicios = async (req, res) => {
 
 const obtenerMiServicioPorId = async (req, res) => {
     try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if (!useInMemoryStore() && !mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ mensaje: 'El identificador del servicio no es valido.' });
+        }
+
+        if (useInMemoryStore()) {
+            const servicioMem = store.findServiceById(req.params.id);
+            if (!servicioMem) {
+                return res.status(404).json({ mensaje: 'Servicio no encontrado.' });
+            }
+
+            if (String(servicioMem.usuario) !== String(req.usuario.id)) {
+                return res.status(403).json({ mensaje: 'No autorizado para ver este servicio.' });
+            }
+
+            return res.json(crearServicioConUsuarioMem(servicioMem));
         }
 
         const servicio = await Servicio.findById(req.params.id);
@@ -223,7 +360,7 @@ const obtenerMiServicioPorId = async (req, res) => {
 
 const actualizarServicio = async (req, res) => {
     try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if (!useInMemoryStore() && !mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ mensaje: 'El identificador del servicio no es valido.' });
         }
 
@@ -232,6 +369,28 @@ const actualizarServicio = async (req, res) => {
             return res.status(400).json({
                 mensaje: 'Datos del servicio invalidos.',
                 errores: parsed.error.flatten().fieldErrors,
+            });
+        }
+
+        if (useInMemoryStore()) {
+            const servicioMem = store.findServiceById(req.params.id);
+            if (!servicioMem) {
+                return res.status(404).json({ mensaje: 'Servicio no encontrado.' });
+            }
+
+            if (String(servicioMem.usuario) !== String(req.usuario.id)) {
+                return res.status(403).json({ mensaje: 'No autorizado para editar este servicio.' });
+            }
+
+            const usuarioMem = store.findUserById(req.usuario.id);
+            const actualizado = store.updateService(req.params.id, {
+                ...parsed.data,
+                oficioCategoria: usuarioMem?.oficioCategoria || parsed.data.categoria || 'General',
+            });
+
+            return res.json({
+                mensaje: 'Servicio actualizado correctamente.',
+                servicio: crearServicioConUsuarioMem(actualizado),
             });
         }
 
@@ -255,8 +414,22 @@ const actualizarServicio = async (req, res) => {
 
 const eliminarServicio = async (req, res) => {
     try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if (!useInMemoryStore() && !mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ mensaje: 'El identificador del servicio no es valido.' });
+        }
+
+        if (useInMemoryStore()) {
+            const servicioMem = store.findServiceById(req.params.id);
+            if (!servicioMem) {
+                return res.status(404).json({ mensaje: 'Servicio no encontrado.' });
+            }
+
+            if (String(servicioMem.usuario) !== String(req.usuario.id)) {
+                return res.status(403).json({ mensaje: 'No autorizado para eliminar este servicio.' });
+            }
+
+            store.removeService(req.params.id);
+            return res.json({ mensaje: 'Servicio eliminado correctamente.' });
         }
 
         const servicio = await Servicio.findById(req.params.id);

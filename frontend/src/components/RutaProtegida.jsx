@@ -6,7 +6,7 @@ const RutaProtegida = ({ children, soloTrabajador = false }) => {
     const { user, loading } = useContext(AuthContext);
 
     if (loading) {
-        return <div className="surface-card empty-state">Validando sesion...</div>;
+        return <div className="surface-card empty-state">Validando sesión...</div>;
     }
 
     if (!user) {

@@ -1,7 +1,11 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import API from '../api/api.js';
 import ServiceCard from '../components/ServiceCard.jsx';
-import { categoriasOficio } from '../data/oficios.js';
+import { categoriasOficio, formatearCategoriaOficio } from '../data/oficios.js';
+import oficioPlomeriaImg from '../assets/oficio-plomeria.jpg';
+import oficioElectricidadImg from '../assets/oficio-electricidad.jpg';
+import oficioTecnologiaImg from '../assets/oficio-tecnologia.jpg';
+import buscadorOficiosImg from '../assets/buscador-oficios.jpg';
 
 const HomePage = () => {
     const [servicios, setServicios] = useState([]);
@@ -12,6 +16,7 @@ const HomePage = () => {
     const [maxPrecio, setMaxPrecio] = useState('');
     const [orden, setOrden] = useState('createdAt-desc');
     const [page, setPage] = useState(1);
+    const [oficioActivo, setOficioActivo] = useState(0);
     const [meta, setMeta] = useState({
         page: 1,
         limit: 9,
@@ -102,11 +107,60 @@ const HomePage = () => {
 
     const contactarServicio = (servicio) => {
         if (!servicio.usuario?.correo && !servicio.usuario?.telefono) {
-            setError('Este trabajador aun no tiene correo ni celular disponibles para contacto.');
+            setError('Este trabajador aún no tiene correo ni celular disponibles para contacto.');
         }
     };
 
     const categoriasVisibles = useMemo(() => ['Todas', ...categoriasOficio], []);
+    const oficiosDestacados = useMemo(
+        () => [
+            {
+                id: 'plomeria',
+                titulo: 'Plomería y reparaciones',
+                descripcion:
+                    'Trabajadores especializados en fugas, grifería, tuberías y mantenimiento del hogar.',
+                imagen: oficioPlomeriaImg,
+                alt: 'Plomero trabajando en reparación de un calentador',
+                etiqueta: 'Hogar',
+            },
+            {
+                id: 'electricidad',
+                titulo: 'Electricidad y mantenimiento',
+                descripcion:
+                    'Técnicos para instalaciones eléctricas, paneles y solución de fallas con protocolos de seguridad.',
+                imagen: oficioElectricidadImg,
+                alt: 'Electricista trabajando en panel eléctrico',
+                etiqueta: 'Mantenimiento',
+            },
+            {
+                id: 'tecnologia',
+                titulo: 'Soporte técnico digital',
+                descripcion:
+                    'Profesionales que diagnostican equipos y realizan soporte especializado en hardware y tecnología.',
+                imagen: oficioTecnologiaImg,
+                alt: 'Técnico reparando un computador en mesa de trabajo',
+                etiqueta: 'Tecnología',
+            },
+        ],
+        []
+    );
+    const oficioActual = oficiosDestacados[oficioActivo];
+
+    useEffect(() => {
+        const intervalo = setInterval(() => {
+            setOficioActivo((actual) => (actual + 1) % oficiosDestacados.length);
+        }, 5200);
+
+        return () => clearInterval(intervalo);
+    }, [oficiosDestacados.length]);
+
+    const irAOficioAnterior = () => {
+        setOficioActivo((actual) => (actual - 1 + oficiosDestacados.length) % oficiosDestacados.length);
+    };
+
+    const irAOficioSiguiente = () => {
+        setOficioActivo((actual) => (actual + 1) % oficiosDestacados.length);
+    };
 
     return (
         <div>
@@ -120,21 +174,30 @@ const HomePage = () => {
                             clara, cercana y profesional.
                         </p>
 
-                        <div className="search-card" style={{ display: 'grid', gap: '0.75rem' }}>
+                        <div className="search-card">
+                            <div className="search-card__visual-wrap">
+                                <img
+                                    className="search-card__visual"
+                                    src={buscadorOficiosImg}
+                                    alt="Trabajador realizando mantenimiento técnico"
+                                />
+                                <div className="search-card__badge">Explora oficios reales en acción</div>
+                            </div>
+
                             <input
                                 className="search-field"
                                 type="text"
-                                placeholder="Busca por oficio, titulo o categoria"
+                                placeholder="Busca por oficio, título o categoría"
                                 value={busquedaInput}
                                 onChange={(event) => setBusquedaInput(event.target.value)}
                             />
 
-                            <div style={{ display: 'grid', gap: '0.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+                            <div className="search-card__filters">
                                 <input
                                     className="input"
                                     type="number"
                                     min="0"
-                                    placeholder="Precio minimo"
+                                    placeholder="Precio mínimo"
                                     value={minPrecio}
                                     onChange={(event) => setMinPrecio(event.target.value)}
                                 />
@@ -142,7 +205,7 @@ const HomePage = () => {
                                     className="input"
                                     type="number"
                                     min="0"
-                                    placeholder="Precio maximo"
+                                    placeholder="Precio máximo"
                                     value={maxPrecio}
                                     onChange={(event) => setMaxPrecio(event.target.value)}
                                 />
@@ -151,10 +214,10 @@ const HomePage = () => {
                                     value={orden}
                                     onChange={(event) => setOrden(event.target.value)}
                                 >
-                                    <option value="createdAt-desc">Mas recientes</option>
+                                    <option value="createdAt-desc">Más recientes</option>
                                     <option value="precio-asc">Precio menor a mayor</option>
                                     <option value="precio-desc">Precio mayor a menor</option>
-                                    <option value="titulo-asc">Titulo A-Z</option>
+                                    <option value="titulo-asc">Título A-Z</option>
                                 </select>
                             </div>
                         </div>
@@ -167,12 +230,78 @@ const HomePage = () => {
                         </div>
                         <div className="stat-card">
                             <span className="stat-value">{categoriasOficio.length}</span>
-                            <p>Categorias para encontrar trabajadores mas rapido.</p>
+                            <p>Categorías para encontrar trabajadores más rápido.</p>
                         </div>
                         <div className="stat-card">
                             <span className="stat-value">{meta.page}/{meta.totalPages}</span>
-                            <p>Navegacion paginada desde el backend para mejor rendimiento.</p>
+                            <p>Navega entre ofertas.</p>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="evidence-section">
+                <div className="section-head">
+                    <div>
+                        <h2 className="section-title">Oficios que encuentras en LaborApp</h2>
+                        <p className="section-copy">
+                            Imágenes reales de los tipos de trabajo que puedes contratar dentro de la plataforma.
+                        </p>
+                    </div>
+                    <div className="carousel-controls" aria-label="Controles del carrusel">
+                        <button type="button" className="icon-button" onClick={irAOficioAnterior} aria-label="Ver oficio anterior">
+                            ‹
+                        </button>
+                        <button type="button" className="icon-button" onClick={irAOficioSiguiente} aria-label="Ver oficio siguiente">
+                            ›
+                        </button>
+                    </div>
+                </div>
+
+                <div className="carousel-shell">
+                    <article className="carousel-feature">
+                        <img
+                            className="carousel-feature__image"
+                            src={oficioActual.imagen}
+                            alt={oficioActual.alt}
+                        />
+                        <div className="carousel-feature__content">
+                            <span className="carousel-feature__tag">{oficioActual.etiqueta}</span>
+                            <h3>{oficioActual.titulo}</h3>
+                            <p>{oficioActual.descripcion}</p>
+                        </div>
+                    </article>
+
+                    <div className="carousel-track" aria-label="Oficios destacados">
+                        {oficiosDestacados.map((oficio, index) => (
+                            <button
+                                key={oficio.id}
+                                type="button"
+                                className={index === oficioActivo ? 'carousel-thumb carousel-thumb--active' : 'carousel-thumb'}
+                                onClick={() => setOficioActivo(index)}
+                                aria-label={`Ver ${oficio.titulo}`}
+                            >
+                                <img
+                                    className="carousel-thumb__image"
+                                    src={oficio.imagen}
+                                    alt={oficio.alt}
+                                    loading="lazy"
+                                />
+                                <span>{oficio.titulo}</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="carousel-dots" aria-label="Indicadores del carrusel">
+                        {oficiosDestacados.map((oficio, index) => (
+                            <button
+                                key={oficio.id}
+                                type="button"
+                                className={index === oficioActivo ? 'carousel-dot carousel-dot--active' : 'carousel-dot'}
+                                onClick={() => setOficioActivo(index)}
+                                aria-label={`Ir a ${oficio.titulo}`}
+                            />
+                        ))}
                     </div>
                 </div>
             </section>
@@ -182,7 +311,7 @@ const HomePage = () => {
                     <div>
                         <h2 className="section-title">Servicios destacados</h2>
                         <p className="section-copy">
-                            Explora ofertas por categoria, rango de precio y especialidad.
+                            Explora ofertas por categoría, rango de precio y especialidad.
                         </p>
                     </div>
                     <p className="section-copy">{meta.total} resultados encontrados</p>
@@ -196,7 +325,7 @@ const HomePage = () => {
                             onClick={() => setCategoriaSeleccionada(categoria)}
                             className={categoriaSeleccionada === categoria ? 'button' : 'button-ghost'}
                         >
-                            {categoria}
+                            {formatearCategoriaOficio(categoria)}
                         </button>
                     ))}
                 </div>
@@ -205,7 +334,7 @@ const HomePage = () => {
                 {!cargando && error && <div className="feedback">{error}</div>}
                 {!cargando && !error && servicios.length === 0 && (
                     <div className="surface-card empty-state">
-                        No encontramos servicios para esa busqueda. Intenta otros filtros.
+                        No encontramos servicios para esa búsqueda. Intenta otros filtros.
                     </div>
                 )}
 
@@ -241,7 +370,7 @@ const HomePage = () => {
                             </button>
 
                             <span className="section-copy">
-                                Pagina {meta.page} de {meta.totalPages}
+                                Página {meta.page} de {meta.totalPages}
                             </span>
 
                             <button

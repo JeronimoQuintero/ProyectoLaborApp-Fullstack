@@ -8,29 +8,40 @@ const MisServiciosPage = () => {
     const [servicios, setServicios] = useState([]);
     const [error, setError] = useState('');
 
-    const cargarMisServicios = async () => {
-        try {
-            setError('');
-            const res = await API.get('/servicios/mis-servicios');
-            setServicios(res.data);
-        } catch (error) {
-            setError('No fue posible cargar tus publicaciones.');
-        }
-    };
-
     useEffect(() => {
+        let activo = true;
+
+        const cargarMisServicios = async () => {
+            try {
+                setError('');
+                const res = await API.get('/servicios/mis-servicios');
+
+                if (activo) {
+                    setServicios(res.data);
+                }
+            } catch {
+                if (activo) {
+                    setError('No fue posible cargar tus publicaciones.');
+                }
+            }
+        };
+
         cargarMisServicios();
+
+        return () => {
+            activo = false;
+        };
     }, []);
 
     const eliminar = async (id) => {
-        if (!window.confirm('Estas seguro de eliminar esta publicacion?')) {
+        if (!window.confirm('¿Estás seguro de eliminar esta publicación?')) {
             return;
         }
 
         try {
             await API.delete(`/servicios/${id}`);
-            cargarMisServicios();
-        } catch (error) {
+            setServicios((prevServicios) => prevServicios.filter((servicio) => servicio._id !== id));
+        } catch {
             alert('No se pudo eliminar el servicio.');
         }
     };
@@ -50,7 +61,7 @@ const MisServiciosPage = () => {
             {error && <div className="feedback">{error}</div>}
 
             {servicios.length === 0 ? (
-                <div className="surface-card empty-state">Todavia no has publicado ningun servicio.</div>
+                <div className="surface-card empty-state">Todavía no has publicado ningún servicio.</div>
             ) : (
                 <div className="cards-grid">
                     {servicios.map((servicio) => (

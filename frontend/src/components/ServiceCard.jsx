@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatearCategoriaOficio, formatearOficio } from '../data/oficios.js';
 
 const ServiceCard = ({
     servicio,
@@ -15,11 +16,11 @@ const ServiceCard = ({
     return (
         <article className="surface-card service-card">
             <div className="service-card__body">
-                <span className="service-card__category">{servicio.categoria}</span>
+                <span className="service-card__category">{formatearCategoriaOficio(servicio.categoria)}</span>
                 <h3 className="service-card__title">{servicio.titulo}</h3>
                 <p className="service-card__description">{servicio.descripcion}</p>
                 <p className="service-card__meta">
-                    Oficio: {servicio.oficio || servicio.usuario?.oficio || 'General'}
+                    Oficio: {formatearOficio(servicio.oficio || servicio.usuario?.oficio || 'General')}
                 </p>
             </div>
 
@@ -31,7 +32,7 @@ const ServiceCard = ({
                     {servicio.usuario?.nombre && (
                         <p className="service-card__meta">
                             {servicio.usuario.nombre}
-                            {servicio.usuario.oficio ? ` · ${servicio.usuario.oficio}` : ''}
+                            {servicio.usuario.oficio ? ` · ${formatearOficio(servicio.usuario.oficio)}` : ''}
                         </p>
                     )}
                 </div>

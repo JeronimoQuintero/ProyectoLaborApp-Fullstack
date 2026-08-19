@@ -1,7 +1,11 @@
-﻿import axios from 'axios';
+import axios from 'axios';
+
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+
+const defaultApiUrl = import.meta.env.PROD ? '/api' : 'http://localhost:8080/api';
 
 const API = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+    baseURL: configuredApiUrl || defaultApiUrl,
     withCredentials: true,
 });
 
